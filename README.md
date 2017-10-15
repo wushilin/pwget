@@ -18,8 +18,9 @@ After this, you will find pwget executable in your $GOPATH/bin. You can add this
 $ pwget <url>
 ```
 
-
-> root@paladin ~# pwget
+Full usage explanation
+```bash
+root@paladin ~# pwget
   -c string
         Specify cookie Header value
   -n int
@@ -30,7 +31,7 @@ $ pwget <url>
         Specify referrer
   -ua string
         Specify User Agent (default "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36")
-Need one and only one url.
+```
 
 # Features of pwget
 

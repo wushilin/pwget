@@ -63,7 +63,6 @@ func main() {
 	if cl < 10240 {
 		*nsegs = 1
 	}
-
 	wg := new(sync.WaitGroup)
 
 	segSize := cl / *nsegs;

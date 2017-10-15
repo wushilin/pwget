@@ -6,6 +6,32 @@ Ever want to download in parallel using simple command like wget?
 
 You have it now.
 
+## Installing...
+```bash
+$ go get -u github.com/wushilin/pwget
+```
+
+After this, you will find pwget executable in your $GOPATH/bin. You can add this to your $PATH, or invoke with full path.
+
+## Usage
+```bash
+$ pwget <url>
+```
+
+
+> root@paladin ~# pwget
+  -c string
+        Specify cookie Header value
+  -n int
+        Split into N segments and download in parallel (default 10)
+  -o string
+        Specify download output file (default is auto detect)
+  -r string
+        Specify referrer
+  -ua string
+        Specify User Agent (default "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36")
+Need one and only one url.
+
 # Features of pwget
 
 ## Simple

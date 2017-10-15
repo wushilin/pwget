@@ -30,8 +30,10 @@ $ pwget -o small.iso http://some-host.download.com/super-large.iso
 ```
 
 ## Resume capable
-The program aborts only 10 consecutive retries (with 5 seconds sleep inbetween retries) failed to download a single byte.
+The program aborts only after 10 consecutive retries (with 5 seconds sleep inbetween retries) failed to download a single byte.
 The program resumes download from last abortion (based on file part size)
+
+Note: If server doesn't support Content-Length response header, the program will not download in split slices.
 
 Enjoy!
 

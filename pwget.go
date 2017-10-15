@@ -17,11 +17,11 @@ var nsegs = flag.Int64("n", 10, "Split into N segments and download in parallel"
 
 var output = flag.String("o", "", "Specify download output file (default is auto detect)");
 
-var cookie = flag.String("c", "", "Specify cookie Header value (default is no cookie)")
+var cookie = flag.String("c", "", "Specify cookie Header value")
 
 const DEFAULT_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"
 
-var ref = flag.String("r", "", "Specify referrer (default is root of downloading host)")
+var ref = flag.String("r", "", "Specify referrer")
 
 var ua = flag.String("ua", DEFAULT_UA, "Specify User Agent")
 
@@ -131,6 +131,11 @@ func downloadPart(urlR *url.URL,cookie, filename string, i int, segStart,
 		if errorCount > 10 {
 			panic(err)
 		}
+		if segEnd < 0 {
+			fmt.Println("Retry not supported, aborting...")
+			os.Remove(filename)
+			panic(err)
+		}
 		fmt.Println("Error occured - will retry", err)
 		time.Sleep(5*time.Second)
 	}
@@ -162,7 +167,10 @@ func downloadPart1(urlR *url.URL, cookie, filename string, i int, segStart, segE
 		return 0, err
 	}
 	//Content-Range: <unit> <range-start>-<range-end>/<size>
-	req.Header.Add("Range", fmt.Sprintf("bytes=%d-%d", segStart+additionalOffset, segEnd))
+	if segEnd > 0 {
+		// content length is known!
+		req.Header.Add("Range", fmt.Sprintf("bytes=%d-%d", segStart+additionalOffset, segEnd))
+	}
 	req.Header.Add("User-Agent", *ua);
 	req.Header.Add("Referer", referrer(urlR.String()))
 	if cookie != "" {

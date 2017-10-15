@@ -17,11 +17,11 @@ var nsegs = flag.Int64("n", 10, "Split into N segments and download in parallel"
 
 var output = flag.String("o", "", "Specify download output file (default is auto detect)");
 
-var cookie = flag.String("c", "", "Specify cookie Header value")
+var cookie = flag.String("c", "", "Specify cookie Header value (default is no cookie)")
 
 const DEFAULT_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"
 
-var ref = flag.String("r", "", "Specify referrer")
+var ref = flag.String("r", "", "Specify referrer (default is root of downloading host)")
 
 var ua = flag.String("ua", DEFAULT_UA, "Specify User Agent")
 

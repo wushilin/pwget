@@ -27,7 +27,6 @@ var ua = flag.String("ua", DEFAULT_UA, "Specify User Agent")
 
 func main() {
 	flag.Parse()
-	fmt.Println("Nsegs = ", *nsegs, "output = ", *output)
 	remainingArgs := flag.Args()
 
 	if len(remainingArgs) > 1 || len(remainingArgs) == 0 {
@@ -259,6 +258,9 @@ func probe(urlReal, cookie string) (*url.URL, int64, string, error) {
 
 	if fn == "" {
 		fn = "DOWNLOAD_NO_NAME"
+	}
+	if strings.Index(fn, "?") != -1 {
+		fn = fn[:strings.Index(fn, "?")]
 	}
 	return location, cl, fn, nil
 }

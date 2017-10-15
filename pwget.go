@@ -233,8 +233,6 @@ func probe(urlReal, cookie string) (*url.URL, int64, string, error) {
 	defer resp.Body.Close()
 	var cl = resp.ContentLength
 
-	fmt.Println(resp.Header)
-
 	var fn string
 	cd := resp.Header.Get("Content-Disposition")
 	location, err := resp.Location()

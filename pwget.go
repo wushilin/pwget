@@ -97,6 +97,7 @@ func main() {
 	}()
 	wg.Wait()
 
+	fmt.Println("Merging into", fn)
 	final_out, err := os.Create(fn)
 	if err != nil {
 		panic(err)

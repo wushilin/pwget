@@ -11,6 +11,7 @@ import (
 	"time"
 	"net/url"
 	"sync/atomic"
+	"crypto/tls"
 )
 
 var nsegs = flag.Int64("n", 10, "Split into N segments and download in parallel");
@@ -139,6 +140,13 @@ func downloadPart(urlR *url.URL,cookie, filename string, i int, segStart,
 	}
 }
 
+func makeClient() *http.Client {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+	return client
+}
 func downloadPart1(urlR *url.URL, cookie, filename string, i int, segStart, segEnd int64, total int64,
 	fn string, wg *sync.WaitGroup, downloaded *uint64) (int64, error){
 	var additionalOffset int64 = 0
@@ -157,7 +165,7 @@ func downloadPart1(urlR *url.URL, cookie, filename string, i int, segStart, segE
 	}
 
 	defer out.Close()
-	client := http.Client{}
+	client := makeClient()
 
 	req, err := http.NewRequest("GET", urlR.String(), nil)
 
@@ -221,7 +229,7 @@ func probe(urlReal, cookie string) (*url.URL, int64, string, error) {
 	if cookie != "" {
 		request.Header.Add("Cookie", cookie)
 	}
-	client := http.Client{}
+	client := makeClient()
 
 	resp, err := client.Do(request)
 

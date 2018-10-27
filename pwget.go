@@ -101,7 +101,7 @@ func main() {
 				fmt.Printf("\rProgress: %dKB of %dKB (%s%%)", modCount, totalKb, percent)
 			}
 			time.Sleep(100*time.Millisecond)
-			if((int64)downloaded == cl) {
+			if(int64(downloaded) == cl) {
 				break
 			}
 		}

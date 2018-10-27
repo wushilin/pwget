@@ -96,7 +96,7 @@ func main() {
 				percentNumber := (int)(modCount*100/totalKb)
 				percent = fmt.Sprintf("%d", percentNumber)
 			}
-			if newModCount > modCount {
+			if newModCount > modCount || int64(downloaded) == cl {
 				modCount = newModCount
 				fmt.Printf("\rProgress: %dKB of %dKB (%s%%)", modCount, totalKb, percent)
 			}

@@ -63,4 +63,3 @@ The program resumes download from last abortion (based on file part size)
 Note: If server doesn't support Content-Length response header, the program will not download in split slices.
 
 Enjoy!
-

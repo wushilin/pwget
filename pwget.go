@@ -85,6 +85,8 @@ func main() {
 	}
 
 	go func() {
+		wg.Add(1)
+		defer wg.Done()
 		modCount := 0
 		totalKb := (int)(cl/1024)
 		for {
@@ -99,6 +101,9 @@ func main() {
 				fmt.Printf("\rProgress: %dKB of %dKB (%s%%)", modCount, totalKb, percent)
 			}
 			time.Sleep(100*time.Millisecond)
+			if(downloaded == cl) {
+				break
+			}
 		}
 	}()
 	wg.Wait()

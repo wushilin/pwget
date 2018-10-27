@@ -86,13 +86,14 @@ func main() {
 
 	go func() {
 		modCount := 0
+		totalKb := (int)(cl/1024)
 		for {
-			newModCount := (int)(downloaded/1024/1024)
+			newModCount := (int)(downloaded/1024)
 			if newModCount > modCount {
 				modCount = newModCount
-				fmt.Println("Downloaded", modCount, "MB so far")
+				fmt.Println("\rProgress:", modCount, "KB of", totalKb,"KB")
 			}
-			time.Sleep(500*time.Millisecond)
+			time.Sleep(100*time.Millisecond)
 		}
 	}()
 	wg.Wait()
@@ -136,7 +137,6 @@ func downloadPart(urlR *url.URL,cookie, filename string, i int, segStart,
 			os.Remove(filename)
 			panic(err)
 		}
-		fmt.Println("Error occured - will retry", err)
 		time.Sleep(5*time.Second)
 	}
 }

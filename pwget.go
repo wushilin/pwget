@@ -91,7 +91,7 @@ func main() {
 			newModCount := (int)(downloaded/1024)
 			if newModCount > modCount {
 				modCount = newModCount
-				fmt.Println("\rProgress:", modCount, "KB of", totalKb,"KB")
+				fmt.Printf("\rProgress: %dKB of %dKB", modCount, totalKb)
 			}
 			time.Sleep(100*time.Millisecond)
 		}

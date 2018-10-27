@@ -89,9 +89,14 @@ func main() {
 		totalKb := (int)(cl/1024)
 		for {
 			newModCount := (int)(downloaded/1024)
+			percent := "-"
+			if(cl != 0) {
+				percentNumber := (int)(downloaded*100/cl)
+				percent = fmt.Sprintf("%d", percentNumber)
+			}
 			if newModCount > modCount {
 				modCount = newModCount
-				fmt.Printf("\rProgress: %dKB of %dKB", modCount, totalKb)
+				fmt.Printf("\rProgress: %dKB of %dKB (%s%%)", modCount, totalKb, percent)
 			}
 			time.Sleep(100*time.Millisecond)
 		}

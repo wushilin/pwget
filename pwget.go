@@ -102,6 +102,7 @@ func main() {
 			}
 			time.Sleep(100*time.Millisecond)
 			if(int64(downloaded) == cl) {
+				fmt.Println("")
 				break
 			}
 		}

@@ -1,22 +1,22 @@
 package main
 
 import (
-	"fmt"
+	"crypto/tls"
 	"flag"
-	"os"
+	"fmt"
+	"io"
 	"net/http"
+	"net/url"
+	"os"
 	"strings"
 	"sync"
-	"io"
-	"time"
-	"net/url"
 	"sync/atomic"
-	"crypto/tls"
+	"time"
 )
 
-var nsegs = flag.Int64("n", 10, "Split into N segments and download in parallel");
+var nsegs = flag.Int64("n", 10, "Split into N segments and download in parallel")
 
-var output = flag.String("o", "", "Specify download output file (default is auto detect)");
+var output = flag.String("o", "", "Specify download output file (default is auto detect)")
 
 var cookie = flag.String("c", "", "Specify cookie Header value")
 
@@ -26,24 +26,40 @@ var ref = flag.String("r", "", "Specify referrer")
 
 var ua = flag.String("ua", DEFAULT_UA, "Specify User Agent")
 
+type arrayFlags []string
+
+func (i *arrayFlags) String() string {
+	return "my string representation"
+}
+
+func (i *arrayFlags) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
+var myFlags arrayFlags
+
 func main() {
+	flag.Var(&myFlags, "H", "Add a header")
+
 	flag.Parse()
+	fmt.Printf("%v\n", myFlags)
 	remainingArgs := flag.Args()
 
 	if len(remainingArgs) > 1 || len(remainingArgs) == 0 {
 		flag.PrintDefaults()
-		fmt.Println("Need one and only one url.");
-		os.Exit(1);
+		fmt.Println("Need one and only one url.")
+		os.Exit(1)
 	}
 
-	urlArg := remainingArgs[0];
+	urlArg := remainingArgs[0]
 	newUrl, cl, fn, err := probe(urlArg, *cookie)
 
 	var urlReal *url.URL
 	if newUrl != nil {
 		urlReal = newUrl
 	} else {
-		urlReal,err = url.Parse(urlArg)
+		urlReal, err = url.Parse(urlArg)
 		if err != nil {
 			panic(err)
 		}
@@ -66,7 +82,7 @@ func main() {
 	}
 	wg := new(sync.WaitGroup)
 
-	segSize := cl / *nsegs;
+	segSize := cl / *nsegs
 	fmt.Println("Each segment", segSize, "Bytes")
 	filenames := make([]string, int(*nsegs))
 
@@ -80,19 +96,19 @@ func main() {
 			segEnd = cl - 1
 		}
 		next_fn := fmt.Sprintf("%s_part_%04d", fn, i)
-		go downloadPart(urlReal, *cookie, next_fn, i, segStart, segEnd, cl, fn, wg, &downloaded);
+		go downloadPart(urlReal, *cookie, next_fn, i, segStart, segEnd, cl, fn, wg, &downloaded)
 		filenames[i] = next_fn
 	}
 
 	go func() {
 		modCount := 0
 		for {
-			newModCount := (int)(downloaded/1024/1024)
+			newModCount := (int)(downloaded / 1024 / 1024)
 			if newModCount > modCount {
 				modCount = newModCount
 				fmt.Println("Downloaded", modCount, "MB so far")
 			}
-			time.Sleep(500*time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 		}
 	}()
 	wg.Wait()
@@ -103,7 +119,7 @@ func main() {
 		panic(err)
 	}
 	defer final_out.Close()
-	for _, next_fn := range (filenames) {
+	for _, next_fn := range filenames {
 		tmp, err := os.Open(next_fn)
 		if err != nil {
 			panic(err)
@@ -115,12 +131,12 @@ func main() {
 	fmt.Println("Done")
 }
 
-func downloadPart(urlR *url.URL,cookie, filename string, i int, segStart,
+func downloadPart(urlR *url.URL, cookie, filename string, i int, segStart,
 	segEnd, total int64, fn string, wg *sync.WaitGroup, downloaded *uint64) {
 	defer wg.Done()
 	errorCount := 0
 	for {
-		copied, err := downloadPart1(urlR, cookie, filename, i, segStart, segEnd, total, fn, wg, downloaded);
+		copied, err := downloadPart1(urlR, cookie, filename, i, segStart, segEnd, total, fn, wg, downloaded)
 		if err == nil || err == io.EOF {
 			return
 		} else if copied > 0 {
@@ -136,8 +152,7 @@ func downloadPart(urlR *url.URL,cookie, filename string, i int, segStart,
 			os.Remove(filename)
 			panic(err)
 		}
-		fmt.Println("Error occured - will retry", err)
-		time.Sleep(5*time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }
 
@@ -149,7 +164,7 @@ func makeClient() *http.Client {
 	return client
 }
 func downloadPart1(urlR *url.URL, cookie, filename string, i int, segStart, segEnd int64, total int64,
-	fn string, wg *sync.WaitGroup, downloaded *uint64) (int64, error){
+	fn string, wg *sync.WaitGroup, downloaded *uint64) (int64, error) {
 	var additionalOffset int64 = 0
 	if stat, err := os.Stat(filename); err == nil {
 		additionalOffset += stat.Size()
@@ -178,7 +193,7 @@ func downloadPart1(urlR *url.URL, cookie, filename string, i int, segStart, segE
 		// content length is known!
 		req.Header.Add("Range", fmt.Sprintf("bytes=%d-%d", segStart+additionalOffset, segEnd))
 	}
-	req.Header.Add("User-Agent", *ua);
+	req.Header.Add("User-Agent", *ua)
 	req.Header.Add("Referer", referrer(urlR.String()))
 	if cookie != "" {
 		req.Header.Add("Cookie", cookie)
@@ -222,7 +237,7 @@ func probe(urlReal, cookie string) (*url.URL, int64, string, error) {
 	request, err := http.NewRequest("GET", urlReal, nil)
 
 	if err != nil {
-		return nil, 0, "", err;
+		return nil, 0, "", err
 	}
 
 	request.Header.Add("User-Agent", *ua)
@@ -273,17 +288,17 @@ func probe(urlReal, cookie string) (*url.URL, int64, string, error) {
 
 func referrer(origUrl string) string {
 	if *ref != "" {
-		return *ref;
+		return *ref
 	}
 	doubleSlash := strings.Index(origUrl, "//")
 	if doubleSlash == -1 {
 		return origUrl
 	}
 
-	lastSlash := strings.LastIndex(origUrl[doubleSlash + 2:], "/")
-	if(lastSlash == -1) {
+	lastSlash := strings.LastIndex(origUrl[doubleSlash+2:], "/")
+	if lastSlash == -1 {
 		return origUrl
 	}
 
-	return origUrl[:lastSlash];
+	return origUrl[:lastSlash]
 }

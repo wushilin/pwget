@@ -101,14 +101,26 @@ func main() {
 	}
 
 	go func() {
+		wg.Add(1)
+		defer wg.Done()
 		modCount := 0
+		totalKb := (int)(cl / 1024)
 		for {
-			newModCount := (int)(downloaded / 1024 / 1024)
-			if newModCount > modCount {
-				modCount = newModCount
-				fmt.Println("Downloaded", modCount, "MB so far")
+			newModCount := (int)(downloaded / 1024)
+			percent := "-"
+			if cl != 0 {
+				percentNumber := (int)(modCount * 100 / totalKb)
+				percent = fmt.Sprintf("%d", percentNumber)
 			}
-			time.Sleep(500 * time.Millisecond)
+			if newModCount > modCount || int64(downloaded) == cl {
+				modCount = newModCount
+				fmt.Printf("\rProgress: %dKB of %dKB (%s%%)", modCount, totalKb, percent)
+			}
+			time.Sleep(100 * time.Millisecond)
+			if int64(downloaded) == cl {
+				fmt.Println("")
+				break
+			}
 		}
 	}()
 	wg.Wait()

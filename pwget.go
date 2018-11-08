@@ -42,21 +42,19 @@ var headers arrayFlags
 func parseHeader(input string) (string, string) {
 	idx := strings.Index(input, ":")
 	if idx < 0 {
-		return "",""
+		return "", ""
 	}
 	name := input[:idx]
-	val := input[idx + 1:]
-	
+	val := input[idx+1:]
+
 	name = strings.TrimSpace(name)
 	val = strings.TrimSpace(val)
 	return name, val
 }
 
 func main() {
-	flag.Var(&headers, "H", "Add a header")
-
+	flag.Var(&headers, "H", "Add custom http headers")
 	flag.Parse()
-	fmt.Printf("%v\n", headers)
 	remainingArgs := flag.Args()
 
 	if len(remainingArgs) > 1 || len(remainingArgs) == 0 {
@@ -99,7 +97,7 @@ func main() {
 	fmt.Println("Each segment", segSize, "Bytes")
 	filenames := make([]string, int(*nsegs))
 
-	var downloaded uint64
+	var downloaded int64
 	downloaded = 0
 	for i := 0; i < int(*nsegs); i++ {
 		wg.Add(1)
@@ -122,18 +120,18 @@ func main() {
 			newModCount := (int)(downloaded / 1024)
 			percent := "-"
 			if cl != 0 {
-				percentNumber := (int)(modCount * 100 / totalKb)
+				percentNumber := (int)(downloaded * int64(100) / cl)
 				percent = fmt.Sprintf("%d", percentNumber)
 			}
 			if newModCount > modCount || int64(downloaded) == cl {
 				modCount = newModCount
 				fmt.Printf("\rProgress: %dKB of %dKB (%s%%)", modCount, totalKb, percent)
 			}
-			time.Sleep(100 * time.Millisecond)
 			if int64(downloaded) == cl {
 				fmt.Println("")
 				break
 			}
+			time.Sleep(50 * time.Millisecond)
 		}
 	}()
 	wg.Wait()
@@ -157,7 +155,7 @@ func main() {
 }
 
 func downloadPart(urlR *url.URL, cookie, filename string, i int, segStart,
-	segEnd, total int64, fn string, wg *sync.WaitGroup, downloaded *uint64) {
+	segEnd, total int64, fn string, wg *sync.WaitGroup, downloaded *int64) {
 	defer wg.Done()
 	errorCount := 0
 	for {
@@ -189,7 +187,7 @@ func makeClient() *http.Client {
 	return client
 }
 func downloadPart1(urlR *url.URL, cookie, filename string, i int, segStart, segEnd int64, total int64,
-	fn string, wg *sync.WaitGroup, downloaded *uint64) (int64, error) {
+	fn string, wg *sync.WaitGroup, downloaded *int64) (int64, error) {
 	var additionalOffset int64 = 0
 	if stat, err := os.Stat(filename); err == nil {
 		additionalOffset += stat.Size()
@@ -218,13 +216,15 @@ func downloadPart1(urlR *url.URL, cookie, filename string, i int, segStart, segE
 		// content length is known!
 		req.Header.Add("Range", fmt.Sprintf("bytes=%d-%d", segStart+additionalOffset, segEnd))
 	}
-	for _, hdr := range(headers) {
-		k,v := parseHeader(hdr)
+	for _, hdr := range headers {
+		k, v := parseHeader(hdr)
 		if k != "" && v != "" {
 			req.Header.Add(k, v)
+		} else {
+			// the header is ignored
 		}
 	}
-	
+
 	req.Header.Add("User-Agent", *ua)
 	req.Header.Add("Referer", referrer(urlR.String()))
 	if cookie != "" {
@@ -243,7 +243,7 @@ func downloadPart1(urlR *url.URL, cookie, filename string, i int, segStart, segE
 		if nr > 0 {
 			nw, ew := out.Write(buf[0:nr])
 			if nw > 0 {
-				atomic.AddUint64(downloaded, uint64(nw))
+				atomic.AddInt64(downloaded, int64(nw))
 				copied += int64(nw)
 			}
 			if ew != nil {
@@ -276,6 +276,14 @@ func probe(urlReal, cookie string) (*url.URL, int64, string, error) {
 	request.Header.Add("Referer", referrer(urlReal))
 	if cookie != "" {
 		request.Header.Add("Cookie", cookie)
+	}
+	for _, hdr := range headers {
+		k, v := parseHeader(hdr)
+		if k != "" && v != "" {
+			request.Header.Add(k, v)
+		} else {
+			// the header is ignored
+		}
 	}
 	client := makeClient()
 

@@ -29,7 +29,7 @@ var ua = flag.String("ua", DEFAULT_UA, "Specify User Agent")
 type arrayFlags []string
 
 func (i *arrayFlags) String() string {
-	return "my string representation"
+	return strings.Join([]string(*i), ",")
 }
 
 func (i *arrayFlags) Set(value string) error {
@@ -37,13 +37,26 @@ func (i *arrayFlags) Set(value string) error {
 	return nil
 }
 
-var myFlags arrayFlags
+var headers arrayFlags
+
+func parseHeader(input string) (string, string) {
+	idx := strings.Index(input, ":")
+	if idx < 0 {
+		return "",""
+	}
+	name := input[:idx]
+	val := input[idx + 1:]
+	
+	name = strings.TrimSpace(name)
+	val = strings.TrimSpace(val)
+	return name, val
+}
 
 func main() {
-	flag.Var(&myFlags, "H", "Add a header")
+	flag.Var(&headers, "H", "Add a header")
 
 	flag.Parse()
-	fmt.Printf("%v\n", myFlags)
+	fmt.Printf("%v\n", headers)
 	remainingArgs := flag.Args()
 
 	if len(remainingArgs) > 1 || len(remainingArgs) == 0 {
@@ -205,6 +218,13 @@ func downloadPart1(urlR *url.URL, cookie, filename string, i int, segStart, segE
 		// content length is known!
 		req.Header.Add("Range", fmt.Sprintf("bytes=%d-%d", segStart+additionalOffset, segEnd))
 	}
+	for _, hdr := range(headers) {
+		k,v := parseHeader(hdr)
+		if k != "" && v != "" {
+			req.Header.Add(k, v)
+		}
+	}
+	
 	req.Header.Add("User-Agent", *ua)
 	req.Header.Add("Referer", referrer(urlR.String()))
 	if cookie != "" {

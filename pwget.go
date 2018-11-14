@@ -197,6 +197,7 @@ func downloadPart1(urlR *url.URL, cookie, filename string, i int, segStart, segE
 	if additionalOffset == 0 {
 		out, err = os.Create(filename)
 	} else {
+		atomic.AddInt64(downloaded, int64(additionalOffset))
 		out, err = os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0600)
 	}
 	if err != nil {

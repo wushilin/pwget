@@ -170,8 +170,9 @@ func downloadPart(urlR *url.URL, cookie, filename string, i int, segStart,
 	segEnd, total int64, fn string, wg *sync.WaitGroup, downloaded *int64) {
 	defer wg.Done()
 	errorCount := 0
+	tryNumber := 0
 	for {
-		copied, err := downloadPart1(urlR, cookie, filename, i, segStart, segEnd, total, fn, wg, downloaded)
+		copied, err := downloadPart1(urlR, cookie, filename, i, segStart, segEnd, total, fn, wg, downloaded, tryNumber)
 		if err == nil || err == io.EOF {
 			return
 		} else if copied > 0 {
@@ -188,6 +189,7 @@ func downloadPart(urlR *url.URL, cookie, filename string, i int, segStart,
 			panic(err)
 		}
 		time.Sleep(5 * time.Second)
+		tryNumber++
 	}
 }
 
@@ -206,7 +208,7 @@ func makeClientOld() *http.Client {
 	return client
 }
 func downloadPart1(urlR *url.URL, cookie, filename string, i int, segStart, segEnd int64, total int64,
-	fn string, wg *sync.WaitGroup, downloaded *int64) (int64, error) {
+	fn string, wg *sync.WaitGroup, downloaded *int64, tryNumber int) (int64, error) {
 	var additionalOffset int64 = 0
 	if stat, err := os.Stat(filename); err == nil {
 		additionalOffset += stat.Size()
@@ -216,7 +218,9 @@ func downloadPart1(urlR *url.URL, cookie, filename string, i int, segStart, segE
 	if additionalOffset == 0 {
 		out, err = os.Create(filename)
 	} else {
-		atomic.AddInt64(downloaded, int64(additionalOffset))
+		if tryNumber == 0 {
+			atomic.AddInt64(downloaded, int64(additionalOffset))
+		}
 		out, err = os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0600)
 	}
 	if err != nil {

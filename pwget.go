@@ -12,7 +12,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	lib "./lib"
+	njlib "github.com/wushilin/netjumper/lib"
 )
 
 var nsegs = flag.Int64("n", 10, "Split into N segments and download in parallel")
@@ -191,7 +191,7 @@ func makeClient() *http.Client {
 	if *jumpHost == "" || *jumpHostSecret == "" {
 		return makeClientOld()
 	}
-	return lib.JumperClient(*jumpHost, *jumpHostSecret)
+	return njlib.JumperClient(*jumpHost, *jumpHostSecret)
 }
 
 func makeClientOld() *http.Client {

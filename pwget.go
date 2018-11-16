@@ -12,10 +12,13 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	lib "./lib"
 )
 
 var nsegs = flag.Int64("n", 10, "Split into N segments and download in parallel")
 
+var jumpHost = flag.String("j", "", "Specifies the jump host")
+var jumpHostSecret = flag.String("k", "", "Specifies the jump host secret")
 var output = flag.String("o", "", "Specify download output file (default is auto detect)")
 
 var cookie = flag.String("c", "", "Specify cookie Header value")
@@ -25,6 +28,8 @@ const DEFAULT_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 var ref = flag.String("r", "", "Specify referrer")
 
 var ua = flag.String("ua", DEFAULT_UA, "Specify User Agent")
+
+var quiet = flag.Bool("q", false, "Specifies whether it should be quiet")
 
 type arrayFlags []string
 
@@ -87,6 +92,7 @@ func main() {
 		fmt.Println("File", fn, "already exists, size is", stat.Size(), "bytes. Please delete first.")
 		os.Exit(1)
 	}
+	fmt.Println("Quiet?", *quiet)
 	fmt.Println("Size", cl, "Bytes, file name", fn)
 	if cl < 10240 {
 		*nsegs = 1
@@ -111,29 +117,31 @@ func main() {
 		filenames[i] = next_fn
 	}
 
-	go func() {
+	if !*quiet {
 		wg.Add(1)
-		defer wg.Done()
-		modCount := 0
-		totalKb := (int)(cl / 1024)
-		for {
-			newModCount := (int)(downloaded / 1024)
-			percent := "-"
-			if cl != 0 {
-				percentNumber := (int)(downloaded * int64(100) / cl)
-				percent = fmt.Sprintf("%d", percentNumber)
+		go func() {
+			defer wg.Done()
+			modCount := 0
+			totalKb := (int)(cl / 1024)
+			for {
+				newModCount := (int)(downloaded / 1024)
+				percent := "-"
+				if cl != 0 {
+					percentNumber := (int)(downloaded * int64(100) / cl)
+					percent = fmt.Sprintf("%d", percentNumber)
+				}
+				if newModCount > modCount || int64(downloaded) == cl {
+					modCount = newModCount
+					fmt.Printf("\rProgress: %dKB of %dKB (%s%%)", modCount, totalKb, percent)
+				}
+				if int64(downloaded) == cl {
+					fmt.Println("")
+					break
+				}
+				time.Sleep(50 * time.Millisecond)
 			}
-			if newModCount > modCount || int64(downloaded) == cl {
-				modCount = newModCount
-				fmt.Printf("\rProgress: %dKB of %dKB (%s%%)", modCount, totalKb, percent)
-			}
-			if int64(downloaded) == cl {
-				fmt.Println("")
-				break
-			}
-			time.Sleep(50 * time.Millisecond)
-		}
-	}()
+		}()
+	}
 	wg.Wait()
 
 	fmt.Println("Merging into", fn)
@@ -180,6 +188,13 @@ func downloadPart(urlR *url.URL, cookie, filename string, i int, segStart,
 }
 
 func makeClient() *http.Client {
+	if *jumpHost == "" || *jumpHostSecret == "" {
+		return makeClientOld()
+	}
+	return lib.JumperClient(*jumpHost, *jumpHostSecret)
+}
+
+func makeClientOld() *http.Client {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -211,6 +226,10 @@ func downloadPart1(urlR *url.URL, cookie, filename string, i int, segStart, segE
 
 	if err != nil {
 		return 0, err
+	}
+	var expectedLength int64 = -1
+	if segEnd > 0 {
+		expectedLength = segEnd - (segStart + additionalOffset)
 	}
 	//Content-Range: <unit> <range-start>-<range-end>/<size>
 	if segEnd > 0 {
@@ -246,6 +265,9 @@ func downloadPart1(urlR *url.URL, cookie, filename string, i int, segStart, segE
 			if nw > 0 {
 				atomic.AddInt64(downloaded, int64(nw))
 				copied += int64(nw)
+				if copied >= expectedLength {
+					return copied, nil
+				}
 			}
 			if ew != nil {
 				err = ew

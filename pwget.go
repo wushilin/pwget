@@ -94,6 +94,10 @@ func main() {
 	}
 	fmt.Println("Quiet?", *quiet)
 	fmt.Println("Size", cl, "Bytes, file name", fn)
+	if cl < 0 {
+		fmt.Println("No content length info, skipped!")
+		os.Exit(1)
+	}
 	if cl < 10240 {
 		*nsegs = 1
 	}

@@ -20,13 +20,19 @@ $ pwget <url>
 
 Full usage explanation
 ```bash
-root@paladin ~# pwget
+  -H value
+        Add custom http headers
   -c string
         Specify cookie Header value
+  -j string
+        Specifies the jump host
+  -k string
+        Specifies the jump host secret
   -n int
         Split into N segments and download in parallel (default 10)
   -o string
         Specify download output file (default is auto detect)
+  -q    Specifies whether it should be quiet
   -r string
         Specify referrer
   -ua string
@@ -54,13 +60,35 @@ $ pwget -ua "Some-Weird-Broser-String" http://some-host.download.com/super-large
 
 # Specify output file
 $ pwget -o small.iso http://some-host.download.com/super-large.iso
+
+# with custom header
+$ pwget -H "someHeader: headerval" -o small.iso http://some-host.download.com/super-large.iso
+
+# use with some jumper
+$ pwget -j "jumpHost:9527" -k "secret" -H "someHeader: headerval" -o small.iso http://some-host.download.com/super-large.iso
+
+Note that if jumper can't be connected, it will fall back to normal dialer (e.g. direct connection)
+
+# use with quiet (no progress reporting)
+$ pwget -q -H "someHeader: headerval" -o small.iso http://some-host.download.com/super-large.iso
+
 ```
 
+Sample output
+
+```
+root@master /o/G/s/g/w/pwget# ./pwget -j home.myhome.net:9527 -k bigsecret "http://releases.ubuntu.com/18.04.1/ubuntu-18.04.1-desktop-amd64.iso?_ga=2.191772394.1990563598.1542159661-244726927.1539156732"
+Quiet? false
+Size 1953349632 Bytes, file name ubuntu-18.04.1-desktop-amd64.iso
+Each segment 195334963 Bytes
+Progress: 168057KB of 1907568KB (8%)
+```
 ## Resume capable
 The program aborts only after 10 consecutive retries (with 5 seconds sleep inbetween retries) failed to download a single byte.
-The program resumes download from last abortion (based on file part size)
+The program resumes download from last abortion (based on file part size), however if you used -n to specify threads, the n must be the same
+otherwise this download may create corrupted file
 
-Note: If server doesn't support Content-Length response header, the program will not download in split slices.
+Note: If server doesn't support Content-Length response header, the program will not download.
 
 Enjoy!
 

@@ -13,6 +13,7 @@ $ go get -u github.com/wushilin/pwget
 
 After this, you will find pwget executable in your $GOPATH/bin. You can add this to your $PATH, or invoke with full path.
 
+
 ## Usage
 ```bash
 $ pwget <url>

@@ -23,7 +23,7 @@ var output = flag.String("o", "", "Specify download output file (default is auto
 
 var cookie = flag.String("c", "", "Specify cookie Header value")
 
-const DEFAULT_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"
+const DEFAULT_UA = "curl/7.64.1"
 
 var ref = flag.String("r", "", "Specify referrer")
 var clstring = flag.String("l", "", "Specify a content length")
@@ -105,7 +105,7 @@ func main() {
 	fmt.Println("Quiet?", *quiet)
 	fmt.Println("Size", cl, "Bytes, file name", fn)
 	if cl < 0 {
-		fmt.Println("No content length info, skipped!")
+		fmt.Println("No content length info, skipped. If you know what is the file size in bytes, please specify using -l 12345 (where 12345 is the file size)")
 		os.Exit(1)
 	}
 	if cl < 10240 {
@@ -332,7 +332,12 @@ func probe(urlReal, cookie string) (*url.URL, int64, string, error) {
 	}
 
 	defer resp.Body.Close()
-	var cl = resp.ContentLength
+	var clstr= resp.Header.Get("Content-Length")
+  fmt.Println("CL", clstr, resp.Header)
+  cl, err := strconv.ParseInt(clstr, 10, 64)
+  if(err != nil || cl == 0) {
+    cl = -1
+  }
   if(clint != -1) {
     cl = clint
   }

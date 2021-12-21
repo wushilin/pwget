@@ -12,7 +12,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	njlib "github.com/wushilin/netjumper/lib"
+  "strconv"
 )
 
 var nsegs = flag.Int64("n", 10, "Split into N segments and download in parallel")
@@ -26,6 +26,9 @@ var cookie = flag.String("c", "", "Specify cookie Header value")
 const DEFAULT_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"
 
 var ref = flag.String("r", "", "Specify referrer")
+var clstring = flag.String("l", "", "Specify a content length")
+
+var clint int64 = -1
 
 var ua = flag.String("ua", DEFAULT_UA, "Specify User Agent")
 
@@ -60,6 +63,13 @@ func parseHeader(input string) (string, string) {
 func main() {
 	flag.Var(&headers, "H", "Add custom http headers")
 	flag.Parse()
+  var err error = nil
+  if(*clstring != "") {
+    clint, err = strconv.ParseInt(*clstring, 10, 64)
+    if(err != nil) {
+      panic(err);
+    }
+  }
 	remainingArgs := flag.Args()
 
 	if len(remainingArgs) > 1 || len(remainingArgs) == 0 {
@@ -194,10 +204,7 @@ func downloadPart(urlR *url.URL, cookie, filename string, i int, segStart,
 }
 
 func makeClient() *http.Client {
-	if *jumpHost == "" || *jumpHostSecret == "" {
-		return makeClientOld()
-	}
-	return njlib.JumperClient(*jumpHost, *jumpHostSecret)
+	return makeClientOld()
 }
 
 func makeClientOld() *http.Client {
@@ -326,7 +333,9 @@ func probe(urlReal, cookie string) (*url.URL, int64, string, error) {
 
 	defer resp.Body.Close()
 	var cl = resp.ContentLength
-
+  if(clint != -1) {
+    cl = clint
+  }
 	var fn string
 	cd := resp.Header.Get("Content-Disposition")
 	location, err := resp.Location()

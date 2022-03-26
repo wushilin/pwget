@@ -34,6 +34,10 @@ var ua = flag.String("ua", DEFAULT_UA, "Specify User Agent")
 
 var quiet = flag.Bool("q", false, "Specifies whether it should be quiet")
 
+var version = flag.Bool("v", false, "Show version")
+
+const VERSION = "1.0.1"
+
 type arrayFlags []string
 
 func (i *arrayFlags) String() string {
@@ -63,6 +67,10 @@ func parseHeader(input string) (string, string) {
 func main() {
 	flag.Var(&headers, "H", "Add custom http headers")
 	flag.Parse()
+	if *version {
+		fmt.Println(VERSION)
+		return
+	}
 	var err error = nil
 	if *clstring != "" {
 		clint, err = strconv.ParseInt(*clstring, 10, 64)

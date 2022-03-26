@@ -39,6 +39,9 @@ Full usage explanation
   -ua string
         Specify User Agent (default "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36")
 ```
+# What is a jump host?
+Jump host is a tool I wrote (similar to proxy, but light weight, secure by default).
+Checkout https://github.com/wushilin/netjumper
 
 # Features of pwget
 

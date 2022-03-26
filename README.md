@@ -8,7 +8,7 @@ You have it now.
 
 ## Installing...
 ```bash
-$ go get -u github.com/wushilin/pwget
+$ go install github.com/wushilin/pwget@latest
 ```
 
 After this, you will find pwget executable in your $GOPATH/bin. You can add this to your $PATH, or invoke with full path.

@@ -13,6 +13,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	njlib "github.com/wushilin/netjumper/lib"
 )
 
 var nsegs = flag.Int64("n", 10, "Split into N segments and download in parallel")
@@ -216,6 +218,11 @@ func makeClient() *http.Client {
 }
 
 func makeClientOld() *http.Client {
+	fmt.Println("[", *jumpHost, "]", "[", *jumpHostSecret, "]")
+	if *jumpHost != "" && *jumpHostSecret != "" {
+		fmt.Printf("Connecting via %s\n", *jumpHost)
+		return njlib.JumperClient(*jumpHost, *jumpHostSecret)
+	}
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}

@@ -218,9 +218,7 @@ func makeClient() *http.Client {
 }
 
 func makeClientOld() *http.Client {
-	fmt.Println("[", *jumpHost, "]", "[", *jumpHostSecret, "]")
 	if *jumpHost != "" && *jumpHostSecret != "" {
-		fmt.Printf("Connecting via %s\n", *jumpHost)
 		return njlib.JumperClient(*jumpHost, *jumpHostSecret)
 	}
 	tr := &http.Transport{

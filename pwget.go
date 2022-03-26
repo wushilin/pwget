@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
-  "strconv"
 )
 
 var nsegs = flag.Int64("n", 10, "Split into N segments and download in parallel")
@@ -63,13 +63,13 @@ func parseHeader(input string) (string, string) {
 func main() {
 	flag.Var(&headers, "H", "Add custom http headers")
 	flag.Parse()
-  var err error = nil
-  if(*clstring != "") {
-    clint, err = strconv.ParseInt(*clstring, 10, 64)
-    if(err != nil) {
-      panic(err);
-    }
-  }
+	var err error = nil
+	if *clstring != "" {
+		clint, err = strconv.ParseInt(*clstring, 10, 64)
+		if err != nil {
+			panic(err)
+		}
+	}
 	remainingArgs := flag.Args()
 
 	if len(remainingArgs) > 1 || len(remainingArgs) == 0 {
@@ -246,6 +246,9 @@ func downloadPart1(urlR *url.URL, cookie, filename string, i int, segStart, segE
 	if segEnd > 0 {
 		expectedLength = segEnd - (segStart + additionalOffset)
 	}
+	if expectedLength <= 0 {
+		return 0, nil
+	}
 	//Content-Range: <unit> <range-start>-<range-end>/<size>
 	if segEnd > 0 {
 		// content length is known!
@@ -332,15 +335,15 @@ func probe(urlReal, cookie string) (*url.URL, int64, string, error) {
 	}
 
 	defer resp.Body.Close()
-	var clstr= resp.Header.Get("Content-Length")
-  fmt.Println("CL", clstr, resp.Header)
-  cl, err := strconv.ParseInt(clstr, 10, 64)
-  if(err != nil || cl == 0) {
-    cl = -1
-  }
-  if(clint != -1) {
-    cl = clint
-  }
+	var clstr = resp.Header.Get("Content-Length")
+	fmt.Println("CL", clstr, resp.Header)
+	cl, err := strconv.ParseInt(clstr, 10, 64)
+	if err != nil || cl == 0 {
+		cl = -1
+	}
+	if clint != -1 {
+		cl = clint
+	}
 	var fn string
 	cd := resp.Header.Get("Content-Disposition")
 	location, err := resp.Location()

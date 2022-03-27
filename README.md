@@ -1,4 +1,4 @@
-# pwget
+# pwget = Parallel WGET
 Similar to wget, but in parallel
 
 Ever downloaded large files over internet, but connection often resets?
